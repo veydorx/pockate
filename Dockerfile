@@ -1,16 +1,22 @@
-FROM golang:1.21 AS build
+FROM golang:1.21-alpine as builder
 
 WORKDIR /app
 COPY . .
 
-RUN go mod download
-RUN go build -o pocketbase ./pb/main.go
+RUN apk add --no-cache git ca-certificates && \
+    go mod init postgresbase && \
+    go get github.com/pocketbase/pocketbase@v0.20.1 && \
+    go get github.com/spf13/cobra@v1.8.0 && \
+    go build -tags 'pq' -o pocketbase
 
-FROM debian:bookworm-slim
+FROM alpine:latest
+RUN apk add --no-cache ca-certificates
 
-WORKDIR /app
-COPY --from=build /app/pocketbase .
+WORKDIR /pb
+COPY --from=builder /app/pocketbase /usr/local/bin/pocketbase
+COPY start.sh /pb/start.sh
 
-EXPOSE 8090
+RUN chmod +x /pb/start.sh
+EXPOSE 8080
 
-CMD ["./pocketbase", "serve", "--http=0.0.0.0:8090"]
+CMD ["/pb/start.sh"]
