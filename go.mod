@@ -2,7 +2,10 @@ module postgresbase
 
 go 1.21
 
-require github.com/pocketbase/pocketbase v0.20.1
+require (
+    github.com/pocketbase/pocketbase v0.20.1
+    github.com/spf13/cobra v1.8.0
+)
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7 // indirect
