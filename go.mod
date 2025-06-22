@@ -2,7 +2,7 @@ module postgresbase
 
 go 1.21
 
-require github.com/pocketbase/pocketbase v0.21.0
+require github.com/pocketbase/pocketbase v0.20.1
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7 // indirect
