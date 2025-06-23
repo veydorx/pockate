@@ -10,5 +10,4 @@ sqlite3 ./pb_data/data.db "PRAGMA cache_size=10000;"
 
 echo "Database tuned."
 
-# 🔥 Direkt çalıştır
 exec ./pocketbase serve --dir pb_data --http 0.0.0.0:3000
