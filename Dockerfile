@@ -6,10 +6,10 @@ COPY . .
 RUN go mod tidy
 RUN go build -tags "sqlite_omit_load_extension" -o pocketbase
 
-# --- Runtime ---
 FROM alpine:latest
 
 WORKDIR /pb
+
 RUN apk add --no-cache sqlite
 
 COPY --from=builder /app/pocketbase ./pocketbase
