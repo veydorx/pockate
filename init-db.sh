@@ -4,7 +4,6 @@ echo "Starting fresh DB..."
 
 chmod +x /pb/pocketbase
 
-# Apply WAL & PRAGMA tuning
 echo "Applying PRAGMA & WAL settings..."
 sqlite3 ./pb_data/data.db "PRAGMA journal_mode=WAL;"
 sqlite3 ./pb_data/data.db "PRAGMA synchronous=NORMAL;"
