@@ -2,6 +2,7 @@ package main
 
 import (
     "log"
+    "os"           // ← Bu eksikti
     "os/exec"
 
     "github.com/pocketbase/dbx"
@@ -12,7 +13,6 @@ import (
 func main() {
     app := pocketbase.NewWithConfig(pocketbase.Config{
         DBConnect: func(dbPath string) (*dbx.DB, error) {
-            // SQLite PRAGMA optimizasyonları
             pragmas := "?_pragma=busy_timeout(10000)" +
                 "&_pragma=journal_mode(WAL)" +
                 "&_pragma=journal_size_limit(200000000)" +
@@ -24,10 +24,10 @@ func main() {
         },
     })
 
-    // İlk admin hesabını oluştur
+    // Superuser otomatik oluştur
     cmd := exec.Command(os.Args[0], "superuser", "upsert", "kenbladex1@gmail.com", "Mc255241@+")
     if err := cmd.Run(); err != nil {
-        log.Println("Superuser otomatik oluşturulamadı:", err)
+        log.Println("Superuser oluşturulamadı:", err)
     }
 
     if err := app.Start(); err != nil {
