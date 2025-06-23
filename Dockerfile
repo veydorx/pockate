@@ -1,23 +1,40 @@
-FROM golang:1.21 AS builder
+# Build stage
+FROM golang:1.23-alpine AS builder
 
-WORKDIR /app
+# Çalışma dizini
+WORKDIR /src
+
+# Bağımlılıklar için gerekli araçları yükle
+RUN apk add --no-cache git gcc musl-dev
+
+# Go modülleri için go.mod ve go.sum dosyalarını kopyala
+COPY go.mod go.sum ./
+RUN go mod tidy
+
+# Tüm kaynak kodunu kopyala
 COPY . .
 
-RUN go mod tidy
-RUN go build -tags "sqlite_omit_load_extension" -o pocketbase
+# CGO ile yüksek performanslı binary derle
+ENV CGO_ENABLED=1
+RUN go build -o /pocketbase -ldflags "-s -w" ./main.go
 
+# Final stage
 FROM alpine:latest
 
-WORKDIR /pb
+# Çalışma dizini
+WORKDIR /app
 
-RUN apk add --no-cache sqlite
+# Gerekli bağımlılıkları yükle (SQLite için)
+RUN apk add --no-cache ca-certificates tzdata
 
-COPY --from=builder /app/pocketbase ./pocketbase
-COPY init-db.sh ./init-db.sh
+# Binary’yi kopyala
+COPY --from=builder /pocketbase /app/pocketbase
 
-RUN chmod 755 ./pocketbase && chmod +x ./init-db.sh
-RUN mkdir -p ./pb_data
+# pb_data için volume tanımla
+VOLUME /app/pb_data
 
-EXPOSE 3000
+# Portu expose et
+EXPOSE 8090
 
-CMD ["./init-db.sh"]
+# PocketBase’i başlat
+CMD ["/app/pocketbase", "serve", "--http=0.0.0.0:8090"]
