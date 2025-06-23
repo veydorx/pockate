@@ -1,22 +1,41 @@
-FROM golang:1.21-alpine as builder
+# 1. GO + CGO destekli ortam
+FROM golang:1.22 AS builder
 
 WORKDIR /app
-COPY . .
 
-RUN apk add --no-cache git ca-certificates && \
-    go mod init postgresbase && \
-    go get github.com/pocketbase/pocketbase@v0.20.1 && \
-    go get github.com/spf13/cobra@v1.8.0 && \
-    go build -tags 'pq' -o pocketbase
+# PocketBase sürümünü indir (örnek: v0.20.1)
+RUN git clone --branch v0.20.1 https://github.com/pocketbase/pocketbase.git .
 
-FROM alpine:latest
-RUN apk add --no-cache ca-certificates
+# CGO: C kütüphaneleri aktif
+ENV CGO_ENABLED=1
+ENV CGO_CFLAGS="-O2"
+ENV CGO_LDFLAGS="-s -w"
+
+# SQLite için C kütüphanesi kur (linux-dev + sqlite)
+RUN apt-get update && apt-get install -y \
+    gcc musl-dev sqlite3 libsqlite3-dev
+
+# PocketBase binary'sini CGO ile build et
+RUN go build -tags "sqlite_omit_load_extension" -o /pb .
+
+# 2. Uygulama container'ı (küçük, hızlı)
+FROM alpine:3.18
 
 WORKDIR /pb
-COPY --from=builder /app/pocketbase /usr/local/bin/pocketbase
-COPY start.sh /pb/start.sh
 
-RUN chmod +x /pb/start.sh
-EXPOSE 8080
+# Sertifikalar (https istekleri için)
+RUN apk add --no-cache ca-certificates bash sqlite
 
-CMD ["/pb/start.sh"]
+# CGO destekli PocketBase binary'sini ekle
+COPY --from=builder /pb /pb/pocketbase
+
+# Başlangıç betiği (PRAGMA + WAL ayarı yapılır)
+COPY init-db.sh /pb/init-db.sh
+RUN chmod +x /pb/init-db.sh
+
+# SQLite veri klasörü
+VOLUME /pb/pb_data
+
+EXPOSE 8090
+
+ENTRYPOINT ["/pb/init-db.sh"]
