@@ -1,16 +1,16 @@
-#!/bin/bash
-DB_PATH="./pb_data/data.db"
-PORT=${PORT:-3000}
+#!/bin/sh
 
-if [ ! -f "$DB_PATH" ]; then
-  ./pocketbase serve --http=:"$PORT" &
-  sleep 3
-  sqlite3 "$DB_PATH" "PRAGMA journal_mode=WAL;"
-  sqlite3 "$DB_PATH" "PRAGMA synchronous=NORMAL;"
-  sqlite3 "$DB_PATH" "PRAGMA cache_size=10000;"
-  sqlite3 "$DB_PATH" "PRAGMA temp_store=MEMORY;"
-  pkill pocketbase
-  sleep 1
-fi
+echo "Starting fresh DB..."
 
-exec ./pocketbase serve --http=:"$PORT"
+chmod +x /pb/pocketbase
+
+# Apply WAL & PRAGMA tuning
+echo "Applying PRAGMA & WAL settings..."
+sqlite3 ./pb_data/data.db "PRAGMA journal_mode=WAL;"
+sqlite3 ./pb_data/data.db "PRAGMA synchronous=NORMAL;"
+sqlite3 ./pb_data/data.db "PRAGMA temp_store=MEMORY;"
+sqlite3 ./pb_data/data.db "PRAGMA cache_size=10000;"
+
+echo "Database tuned."
+
+exec /pb/pocketbase serve --dir pb_data --http 0.0.0.0:3000
