@@ -2,6 +2,8 @@ package main
 
 import (
     "log"
+    "os/exec"
+
     "github.com/pocketbase/dbx"
     "github.com/pocketbase/pocketbase"
     _ "github.com/mattn/go-sqlite3"
@@ -21,6 +23,12 @@ func main() {
             return dbx.Open("sqlite3", "file:"+dbPath+pragmas)
         },
     })
+
+    // İlk admin hesabını oluştur
+    cmd := exec.Command(os.Args[0], "superuser", "upsert", "kenbladex1@gmail.com", "Mc255241@+")
+    if err := cmd.Run(); err != nil {
+        log.Println("Superuser otomatik oluşturulamadı:", err)
+    }
 
     if err := app.Start(); err != nil {
         log.Fatal(err)
