@@ -1,37 +1,40 @@
-# Build stage
+# Build aşaması
 FROM golang:1.23-alpine AS builder
 
 # Çalışma dizini
 WORKDIR /src
 
-# Bağımlılıklar için gerekli araçları yükle
+# Gerekli araçları yükle
 RUN apk add --no-cache git gcc musl-dev
 
-# Go modülleri için go.mod ve go.sum dosyalarını kopyala
+# go.mod ve go.sum dosyalarını kopyala
 COPY go.mod go.sum ./
 RUN go mod tidy
 
 # Tüm kaynak kodunu kopyala
 COPY . .
 
-# CGO ile yüksek performanslı binary derle
+# Performanslı build için CGO
 ENV CGO_ENABLED=1
 RUN go build -o /pocketbase -ldflags "-s -w" ./main.go
 
-# Final stage
+# Final aşama (küçük imaj)
 FROM alpine:latest
 
 # Çalışma dizini
 WORKDIR /app
 
-# Gerekli bağımlılıkları yükle (SQLite için)
+# Gerekli sistem kütüphaneleri
 RUN apk add --no-cache ca-certificates tzdata
 
 # Binary’yi kopyala
 COPY --from=builder /pocketbase /app/pocketbase
 
-# Portu expose et
+# (İsteğe bağlı) pb_data klasörünü oluştur
+RUN mkdir -p /app/pb_data
+
+# Portu aç
 EXPOSE 8090
 
-# PocketBase’i başlat
-CMD ["/app/pocketbase", "serve", "--http=0.0.0.0:8090"]
+# Uygulamanı başlat
+CMD ["/app/pocketbase"]
