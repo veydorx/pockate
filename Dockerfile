@@ -4,18 +4,18 @@ WORKDIR /app
 COPY . .
 
 RUN go mod tidy
-RUN go build -tags "sqlite_omit_load_extension" -o /pb/pocketbase
+RUN go build -tags "sqlite_omit_load_extension" -o pocketbase
 
+# --- Runtime ---
 FROM alpine:latest
 
 WORKDIR /pb
-
 RUN apk add --no-cache sqlite
 
-COPY --from=builder /pb/pocketbase ./pocketbase
+COPY --from=builder /app/pocketbase ./pocketbase
 COPY init-db.sh ./init-db.sh
 
-RUN chmod +x ./init-db.sh
+RUN chmod +x ./init-db.sh ./pocketbase
 RUN mkdir -p ./pb_data
 
 EXPOSE 3000
