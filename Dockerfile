@@ -30,9 +30,6 @@ RUN apk add --no-cache ca-certificates tzdata
 # Binary’yi kopyala
 COPY --from=builder /pocketbase /app/pocketbase
 
-# pb_data için volume tanımla
-VOLUME /app/pb_data
-
 # Portu expose et
 EXPOSE 8090
 
