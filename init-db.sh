@@ -1,11 +1,11 @@
 #!/bin/bash
 
 DB_PATH="./pb_data/data.db"
+PORT=${PORT:-3000}
 
-# Veritabanı yoksa başlat
 if [ ! -f "$DB_PATH" ]; then
     echo "Starting fresh DB..."
-    ./pocketbase serve &
+    ./pocketbase serve --http=:"$PORT" &
 
     sleep 3
 
@@ -15,10 +15,8 @@ if [ ! -f "$DB_PATH" ]; then
     sqlite3 "$DB_PATH" "PRAGMA cache_size=10000;"
     sqlite3 "$DB_PATH" "PRAGMA temp_store=MEMORY;"
 
-    echo "Database tuned."
     pkill pocketbase
     sleep 1
 fi
 
-# PocketBase başlasın
-exec ./pocketbase serve
+exec ./pocketbase serve --http=:"$PORT"
