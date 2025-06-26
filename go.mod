@@ -3,7 +3,7 @@ module github.com/veydorx/pockate
 go 1.23
 
 require (
-	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/lib/pq v1.10.9
 	github.com/pocketbase/dbx v1.11.0
 	github.com/pocketbase/pocketbase v0.24.3
 )
@@ -67,11 +67,4 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250106144421-5f5ef82da422 // indirect
 	google.golang.org/grpc v1.69.2 // indirect
 	google.golang.org/protobuf v1.36.2 // indirect
-	modernc.org/gc/v3 v3.0.0-20250105121824-520be1a3aee6 // indirect
-	modernc.org/libc v1.55.3 // indirect
-	modernc.org/mathutil v1.7.1 // indirect
-	modernc.org/memory v1.8.1 // indirect
-	modernc.org/sqlite v1.34.4 // indirect
-	modernc.org/strutil v1.2.1 // indirect
-	modernc.org/token v1.1.0 // indirect
 )

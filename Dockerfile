@@ -4,8 +4,8 @@ FROM golang:1.23-alpine AS builder
 # Çalışma dizini
 WORKDIR /src
 
-# Bağımlılıklar için gerekli araçları yükle
-RUN apk add --no-cache git gcc musl-dev
+# PostgreSQL client ve build araçları
+RUN apk add --no-cache git gcc musl-dev postgresql-client
 
 # Go modülleri için go.mod ve go.sum dosyalarını kopyala
 COPY go.mod go.sum ./
@@ -24,14 +24,14 @@ FROM alpine:latest
 # Çalışma dizini
 WORKDIR /app
 
-# Gerekli bağımlılıkları yükle (SQLite için)
-RUN apk add --no-cache ca-certificates tzdata
+# PostgreSQL client ve gerekli bağımlılıkları yükle
+RUN apk add --no-cache ca-certificates tzdata postgresql-client
 
-# Binary’yi kopyala
+# Binary'yi kopyala
 COPY --from=builder /pocketbase /app/pocketbase
 
 # Portu expose et
 EXPOSE 8090
 
-# PocketBase’i başlat
+# PocketBase'i başlat
 CMD ["/app/pocketbase", "serve", "--http=0.0.0.0:8090"]

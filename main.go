@@ -1,36 +1,34 @@
 package main
 
 import (
-    "log"
-    "os"           // ← Bu eksikti
-    "os/exec"
+	"log"
+	"os"
+	"os/exec"
 
-    "github.com/pocketbase/dbx"
-    "github.com/pocketbase/pocketbase"
-    _ "github.com/mattn/go-sqlite3"
+	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase"
+	_ "github.com/lib/pq" // Sadece PostgreSQL driver
 )
 
 func main() {
-    app := pocketbase.NewWithConfig(pocketbase.Config{
-        DBConnect: func(dbPath string) (*dbx.DB, error) {
-            pragmas := "?_pragma=busy_timeout(10000)" +
-                "&_pragma=journal_mode(WAL)" +
-                "&_pragma=journal_size_limit(200000000)" +
-                "&_pragma=synchronous(NORMAL)" +
-                "&_pragma=foreign_keys(ON)" +
-                "&_pragma=temp_store(MEMORY)" +
-                "&_pragma=cache_size(-16000)"
-            return dbx.Open("sqlite3", "file:"+dbPath+pragmas)
-        },
-    })
+	app := pocketbase.NewWithConfig(pocketbase.Config{
+		DBConnect: func(dbPath string) (*dbx.DB, error) {
+			// Railway PostgreSQL bağlantısı
+			databaseURL := os.Getenv("DATABASE_URL")
+			if databaseURL == "" {
+				log.Fatal("DATABASE_URL environment variable is required for PostgreSQL")
+			}
+			return dbx.Open("postgres", databaseURL)
+		},
+	})
 
-    // Superuser otomatik oluştur
-    cmd := exec.Command(os.Args[0], "superuser", "upsert", "kenbladex1@gmail.com", "Mc255241@+")
-    if err := cmd.Run(); err != nil {
-        log.Println("Superuser oluşturulamadı:", err)
-    }
+	// Superuser otomatik oluştur
+	cmd := exec.Command(os.Args[0], "superuser", "upsert", "kenbladex1@gmail.com", "Mc255241@+")
+	if err := cmd.Run(); err != nil {
+		log.Println("Superuser oluşturulamadı:", err)
+	}
 
-    if err := app.Start(); err != nil {
-        log.Fatal(err)
-    }
+	if err := app.Start(); err != nil {
+		log.Fatal(err)
+	}
 }
