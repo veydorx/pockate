@@ -5,18 +5,21 @@ FROM golang:1.23-alpine AS builder
 WORKDIR /src
 
 # PostgreSQL client ve build araçları
-RUN apk add --no-cache git gcc musl-dev postgresql-client
+RUN apk add --no-cache git gcc musl-dev
 
 # Go modülleri için go.mod ve go.sum dosyalarını kopyala
 COPY go.mod go.sum ./
-RUN go mod tidy
+
+# Modülleri indir
+RUN go mod download
 
 # Tüm kaynak kodunu kopyala
 COPY . .
 
-# CGO ile yüksek performanslı binary derle
-ENV CGO_ENABLED=1
-RUN go build -o /pocketbase -ldflags "-s -w" ./main.go
+# Binary derle
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+RUN go build -a -installsuffix cgo -o /pocketbase -ldflags "-s -w" ./main.go
 
 # Final stage
 FROM alpine:latest
@@ -24,8 +27,8 @@ FROM alpine:latest
 # Çalışma dizini
 WORKDIR /app
 
-# PostgreSQL client ve gerekli bağımlılıkları yükle
-RUN apk add --no-cache ca-certificates tzdata postgresql-client
+# Gerekli bağımlılıkları yükle
+RUN apk add --no-cache ca-certificates tzdata
 
 # Binary'yi kopyala
 COPY --from=builder /pocketbase /app/pocketbase
